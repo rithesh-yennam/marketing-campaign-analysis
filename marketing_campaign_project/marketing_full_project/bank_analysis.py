@@ -75,4 +75,4 @@ print("\n  Subscription Rate by Call Duration:")
 for _, r in dur.iterrows():
     print(f"    {str(r['duration_bin']):<10} {r['Rate%']:>5.1f}%")
 
-print("\n✅  Bank analysis complete — summaries saved to data/")
+print("\n Bank analysis complete — summaries saved to data/")

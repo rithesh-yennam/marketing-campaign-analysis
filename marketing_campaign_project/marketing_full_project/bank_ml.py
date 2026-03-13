@@ -107,7 +107,7 @@ fi.to_csv('data/bank_feature_importance.csv', index=False)
 
 print(f"\n  Top 10 Feature Importances (Random Forest):")
 for _, row in fi.head(10).iterrows():
-    bar = '█' * int(row['Importance'] * 100)
+    bar = '' * int(row['Importance'] * 100)
     print(f"    {row['Feature']:<22} {bar} {row['Importance']:.4f}")
 
 # ── Visualize ────────────────────────────────────────────────────
@@ -199,5 +199,5 @@ ax5.set_ylim(0, 1.05)
 
 plt.tight_layout()
 plt.savefig('outputs/bank_ml.png', dpi=150, bbox_inches='tight', facecolor=BG)
-print("\n✅  Saved: outputs/bank_ml.png")
-print("🎉  ML classification complete!")
+print("\n Saved: outputs/bank_ml.png")
+print("  ML classification complete!")

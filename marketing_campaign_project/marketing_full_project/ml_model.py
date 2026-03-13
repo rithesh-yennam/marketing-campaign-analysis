@@ -81,7 +81,7 @@ importance_df = pd.DataFrame({
 
 print("\n  Top Feature Importances (Random Forest):")
 for _, row in importance_df.head(8).iterrows():
-    bar = '█' * int(row['Importance'] * 50)
+    bar = ' ' * int(row['Importance'] * 50)
     print(f"  {row['Feature']:<18} {bar} {row['Importance']:.4f}")
 
 # ── Visualize: Actual vs Predicted + Feature Importance ──────────
@@ -116,9 +116,9 @@ for sp in ax2.spines.values(): sp.set_color(BORDER)
 
 plt.tight_layout()
 plt.savefig('outputs/ml_model.png', dpi=150, bbox_inches='tight', facecolor=BG)
-print("\n✅  Saved: outputs/ml_model.png")
+print("\n  Saved: outputs/ml_model.png")
 
 results_df = pd.DataFrame(results)
 results_df.to_csv('data/model_results.csv', index=False)
-print("✅  Saved: data/model_results.csv")
-print("\n🎉  ML analysis complete!")
+print("  Saved: data/model_results.csv")
+print("\n  ML analysis complete!")

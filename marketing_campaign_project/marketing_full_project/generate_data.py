@@ -70,5 +70,5 @@ df = df.sort_values('Date').reset_index(drop=True)
 
 os.makedirs('data', exist_ok=True)
 df.to_csv('data/marketing_data.csv', index=False)
-print(f"✅  Dataset created: {df.shape[0]} rows × {df.shape[1]} columns")
+print(f" Dataset created: {df.shape[0]} rows × {df.shape[1]} columns")
 print(df.head(3).to_string())

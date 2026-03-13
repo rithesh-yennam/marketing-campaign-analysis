@@ -139,7 +139,7 @@ ax4.set_title('ROI % by Region', fontsize=12, fontweight='bold', pad=10)
 ax4.set_ylabel('ROI %', color=MUTED)
 
 plt.savefig('outputs/dashboard_main.png', dpi=150, bbox_inches='tight', facecolor=BG)
-print("✅  Saved: outputs/dashboard_main.png")
+print("Saved: outputs/dashboard_main.png")
 
 # ════════════════════════════════════════════════════════════════
 # CHART 2 — Conversion Funnel + CTR/CVR Comparison
@@ -182,7 +182,7 @@ ax_g.legend(facecolor=PANEL, edgecolor=BORDER, labelcolor=TEXT, fontsize=9)
 
 plt.tight_layout()
 plt.savefig('outputs/channel_efficiency.png', dpi=150, bbox_inches='tight', facecolor=BG)
-print("✅  Saved: outputs/channel_efficiency.png")
+print("Saved: outputs/channel_efficiency.png")
 
 # ════════════════════════════════════════════════════════════════
 # CHART 3 — Spend vs Revenue Scatter + Quarterly Trend
@@ -217,6 +217,6 @@ ax_q.set_ylabel('Revenue ($K)')
 
 plt.tight_layout()
 plt.savefig('outputs/budget_quarterly.png', dpi=150, bbox_inches='tight', facecolor=BG)
-print("✅  Saved: outputs/budget_quarterly.png")
+print(" Saved: outputs/budget_quarterly.png")
 
-print("\n🎉  All charts saved to outputs/")
+print("\n All charts saved to outputs/")

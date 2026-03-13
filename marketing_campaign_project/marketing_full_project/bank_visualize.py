@@ -139,7 +139,7 @@ ax4.set_ylabel('Conversion Rate %')
 ax4.set_xlabel('Call Duration')
 
 plt.savefig('outputs/bank_dashboard.png', dpi=150, bbox_inches='tight', facecolor=BG)
-print("✅  Saved: outputs/bank_dashboard.png")
+print("Saved: outputs/bank_dashboard.png")
 
 # ════════════════════════════════════════════════════════════════
 # CHART B — Education, Previous Outcome, Economic Indicators
@@ -192,5 +192,5 @@ ax_ec.legend(facecolor=PANEL, edgecolor=BORDER, labelcolor=TEXT, fontsize=9)
 
 plt.tight_layout()
 plt.savefig('outputs/bank_deep_dive.png', dpi=150, bbox_inches='tight', facecolor=BG)
-print("✅  Saved: outputs/bank_deep_dive.png")
-print("\n🎉  Bank visualizations complete!")
+print(" Saved: outputs/bank_deep_dive.png")
+print("\n  Bank visualizations complete!")

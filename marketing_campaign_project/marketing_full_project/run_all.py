@@ -30,9 +30,9 @@ for msg, script in steps:
     result = subprocess.run([sys.executable, script], capture_output=True, text=True)
     elapsed = time.time() - t
     if result.returncode == 0:
-        print(f"  ✅  Done ({elapsed:.1f}s)")
+        print(f"Done ({elapsed:.1f}s)")
     else:
-        print(f"  ❌  Error in {script}:")
+        print(f"Error in {script}:")
         print(result.stderr[-500:])
 
 print("\n" + "=" * 60)
@@ -47,4 +47,4 @@ for f in sorted(os.listdir('data')):
     size = os.path.getsize(f'data/{f}') / 1024
     print(f"  data/{f:<39} {size:>6.0f} KB")
 
-print("\n🎉  Project complete! All files ready.")
+print("\n Project complete! All files ready.")

@@ -110,7 +110,7 @@ quarterly.to_csv('data/quarterly_summary.csv', index=False)
 top10 = df.nlargest(10, 'ROAS')[['Date','Channel','Campaign','Region','Budget','Revenue','ROAS','ROI']]
 top10.to_csv('data/top10_campaigns.csv', index=False)
 
-print("\n✅  All summaries saved to data/")
+print("\n  All summaries saved to data/")
 print("    → channel_summary.csv")
 print("    → campaign_summary.csv")
 print("    → region_summary.csv")
