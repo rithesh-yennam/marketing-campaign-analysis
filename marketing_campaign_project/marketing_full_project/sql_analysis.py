@@ -1,11 +1,9 @@
 """
 Marketing Campaign Performance Analysis
-Step: SQL Analysis using SQLite
-All queries work on the real bank marketing dataset
+SQL Analysis -- MySQL
 Author: Rithesh Yennam
 """
 import pandas as pd
-import sqlite3
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -16,38 +14,133 @@ warnings.filterwarnings('ignore')
 os.makedirs('data', exist_ok=True)
 os.makedirs('outputs', exist_ok=True)
 
+# ── MySQL CONNECTION SETTINGS ─────────────────────────────────────
+MYSQL_HOST     = 'localhost'
+MYSQL_PORT     = 3306
+MYSQL_USER     = 'root'
+MYSQL_PASSWORD = 'Ritesh123#'
+MYSQL_DATABASE = 'marketing_campaign_db'
+
+# ── Connect to MySQL ──────────────────────────────────────────────
+USE_MYSQL = False
+conn = None
+
+try:
+    import mysql.connector
+    conn = mysql.connector.connect(
+        host=MYSQL_HOST,
+        port=MYSQL_PORT,
+        user=MYSQL_USER,
+        password=MYSQL_PASSWORD,
+    )
+    cursor = conn.cursor()
+    cursor.execute(f"CREATE DATABASE IF NOT EXISTS {MYSQL_DATABASE}")
+    cursor.execute(f"USE {MYSQL_DATABASE}")
+    conn.database = MYSQL_DATABASE
+    USE_MYSQL = True
+    print("[OK] Connected to MySQL successfully")
+    print(f"     Host: {MYSQL_HOST} | Database: {MYSQL_DATABASE}")
+except Exception as e:
+    print(f"[INFO] MySQL not available: {e}")
+    print("[INFO] Falling back to SQLite (queries are identical)")
+    import sqlite3
+    conn = sqlite3.connect(':memory:')
+
 print("=" * 60)
-print("  SQL ANALYSIS — BANK MARKETING CAMPAIGN")
+print("  SQL ANALYSIS -- BANK MARKETING CAMPAIGN")
 print("=" * 60)
 
-# ── Load data into SQLite ─────────────────────────────────────────
+# ── Load Data ─────────────────────────────────────────────────────
 df = pd.read_csv('data/bank_marketing_clean.csv')
-conn = sqlite3.connect(':memory:')
-df.to_sql('marketing_campaign', conn, index=False, if_exists='replace')
-print(f"\n  Loaded {len(df):,} records into SQLite in-memory database")
-print(f"  Table: marketing_campaign")
+df.columns = [c.replace('.', '_') for c in df.columns]
 
-def run_query(title, sql):
-    print(f"\n{'='*60}")
-    print(f"  {title}")
-    print(f"{'='*60}")
-    print(f"  SQL:\n")
-    for line in sql.strip().split('\n'):
-        print(f"    {line}")
-    result = pd.read_sql_query(sql, conn)
-    print(f"\n  Result ({len(result)} rows):")
-    print(result.to_string(index=False))
-    return result
+if USE_MYSQL:
+    cursor = conn.cursor()
+    cursor.execute("DROP TABLE IF EXISTS marketing_campaign")
+    cursor.execute("""
+    CREATE TABLE marketing_campaign (
+        id                INT AUTO_INCREMENT PRIMARY KEY,
+        age               INT,
+        age_group         VARCHAR(20),
+        job               VARCHAR(50),
+        marital           VARCHAR(20),
+        education         VARCHAR(50),
+        housing           VARCHAR(10),
+        loan              VARCHAR(10),
+        contact           VARCHAR(20),
+        month             VARCHAR(10),
+        day_of_week       VARCHAR(10),
+        duration          INT,
+        duration_capped   FLOAT,
+        duration_category VARCHAR(30),
+        campaign          INT,
+        campaign_intensity VARCHAR(20),
+        pdays             INT,
+        previous          INT,
+        poutcome          VARCHAR(20),
+        season            VARCHAR(10),
+        previously_contacted INT,
+        emp_var_rate      FLOAT,
+        cons_price_idx    FLOAT,
+        cons_conf_idx     FLOAT,
+        euribor3m         FLOAT,
+        nr_employed       FLOAT,
+        subscribed        INT,
+        y                 VARCHAR(5)
+    )""")
+    conn.commit()
+
+    cols = ['age','age_group','job','marital','education',
+            'housing','loan','contact','month','day_of_week',
+            'duration','duration_capped','duration_category',
+            'campaign','campaign_intensity','pdays','previous',
+            'poutcome','season','previously_contacted',
+            'emp_var_rate','cons_price_idx','cons_conf_idx',
+            'euribor3m','nr_employed','subscribed','y']
+
+    df_ins = df[cols].copy()
+    for c in ['duration_category', 'campaign_intensity', 'age_group']:
+        df_ins[c] = df_ins[c].astype(str)
+
+    placeholders = ', '.join(['%s'] * len(cols))
+    ins_sql = f"INSERT INTO marketing_campaign ({', '.join(cols)}) VALUES ({placeholders})"
+
+    for i in range(0, len(df_ins), 1000):
+        batch = df_ins.iloc[i:i+1000]
+        rows = [tuple(None if pd.isna(v) else v for v in row) for row in batch.values]
+        cursor.executemany(ins_sql, rows)
+    conn.commit()
+    print(f"[OK] Inserted {len(df):,} rows into MySQL table")
+
+    def run_query(title, sql):
+        print(f"\n{'='*60}")
+        print(f"  {title}")
+        print(f"{'='*60}")
+        result = pd.read_sql(sql, conn)
+        print(result.to_string(index=False))
+        return result
+
+else:
+    df.to_sql('marketing_campaign', conn, index=False, if_exists='replace')
+    print(f"[OK] Loaded {len(df):,} records into SQLite")
+
+    def run_query(title, sql):
+        print(f"\n{'='*60}")
+        print(f"  {title}")
+        print(f"{'='*60}")
+        result = pd.read_sql_query(sql, conn)
+        print(result.to_string(index=False))
+        return result
 
 # ────────────────────────────────────────────────────────────────
 # QUERY 1: Overall Campaign Success Rate
 # ────────────────────────────────────────────────────────────────
 q1 = run_query("Q1: Overall Campaign Success Rate", """
 SELECT
-    COUNT(*)                                      AS total_contacts,
-    SUM(subscribed)                               AS total_subscribed,
-    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2) AS success_rate_pct,
-    ROUND(AVG(duration), 0)                       AS avg_call_duration_sec
+    COUNT(*)                                        AS total_contacts,
+    SUM(subscribed)                                 AS total_subscribed,
+    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)   AS success_rate_pct,
+    ROUND(AVG(duration), 0)                         AS avg_call_duration_sec
 FROM marketing_campaign
 """)
 
@@ -57,9 +150,9 @@ FROM marketing_campaign
 q2 = run_query("Q2: Customer Segmentation by Education", """
 SELECT
     education,
-    COUNT(*)                                          AS total_customers,
-    SUM(subscribed)                                   AS subscribed,
-    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)     AS conversion_rate_pct
+    COUNT(*)                                        AS total_customers,
+    SUM(subscribed)                                 AS subscribed,
+    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)   AS conversion_rate_pct
 FROM marketing_campaign
 GROUP BY education
 ORDER BY conversion_rate_pct DESC
@@ -71,10 +164,10 @@ ORDER BY conversion_rate_pct DESC
 q3 = run_query("Q3: Campaign Response by Job Category", """
 SELECT
     job,
-    COUNT(*)                                          AS total_contacts,
-    SUM(subscribed)                                   AS subscribed,
-    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)     AS conversion_rate_pct,
-    ROUND(AVG(duration), 0)                           AS avg_call_sec
+    COUNT(*)                                        AS total_contacts,
+    SUM(subscribed)                                 AS subscribed,
+    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)   AS conversion_rate_pct,
+    ROUND(AVG(duration), 0)                         AS avg_call_sec
 FROM marketing_campaign
 GROUP BY job
 ORDER BY conversion_rate_pct DESC
@@ -86,59 +179,59 @@ ORDER BY conversion_rate_pct DESC
 q4 = run_query("Q4: Monthly Campaign Performance", """
 SELECT
     month,
-    COUNT(*)                                          AS contacts,
-    SUM(subscribed)                                   AS subscriptions,
-    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)     AS conversion_pct,
-    ROUND(AVG(duration), 0)                           AS avg_duration_sec
+    COUNT(*)                                        AS total_contacts,
+    SUM(subscribed)                                 AS subscriptions,
+    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)   AS conversion_pct,
+    ROUND(AVG(duration), 0)                         AS avg_duration_sec
 FROM marketing_campaign
 GROUP BY month
 ORDER BY subscriptions DESC
 """)
 
 # ────────────────────────────────────────────────────────────────
-# QUERY 5: Aggregation — Age Group Analysis
+# QUERY 5: Age Group Analysis
 # ────────────────────────────────────────────────────────────────
-q5 = run_query("Q5: Aggregation — Age Group Subscription Analysis", """
+q5 = run_query("Q5: Age Group Subscription Analysis", """
 SELECT
     age_group,
-    COUNT(*)                                          AS total,
-    SUM(subscribed)                                   AS subscribed,
-    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)     AS conversion_pct,
-    ROUND(AVG(age), 1)                                AS avg_age,
-    ROUND(AVG(duration), 0)                           AS avg_call_sec
+    COUNT(*)                                        AS total,
+    SUM(subscribed)                                 AS subscribed,
+    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)   AS conversion_pct,
+    ROUND(AVG(age), 1)                              AS avg_age,
+    ROUND(AVG(duration), 0)                         AS avg_call_sec
 FROM marketing_campaign
 GROUP BY age_group
 ORDER BY age_group
 """)
 
 # ────────────────────────────────────────────────────────────────
-# QUERY 6: Previous Outcome Impact
+# QUERY 6: Previous Campaign Outcome Impact
 # ────────────────────────────────────────────────────────────────
 q6 = run_query("Q6: Impact of Previous Campaign Outcome", """
 SELECT
-    poutcome                                          AS previous_outcome,
-    COUNT(*)                                          AS total_contacts,
-    SUM(subscribed)                                   AS subscribed,
-    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)     AS conversion_pct
+    poutcome                                        AS previous_outcome,
+    COUNT(*)                                        AS total_contacts,
+    SUM(subscribed)                                 AS subscribed,
+    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)   AS conversion_pct
 FROM marketing_campaign
 GROUP BY poutcome
 ORDER BY conversion_pct DESC
 """)
 
 # ────────────────────────────────────────────────────────────────
-# QUERY 7: Top Performing Customer Segments (Combined)
+# QUERY 7: Top Customer Segments
 # ────────────────────────────────────────────────────────────────
-q7 = run_query("Q7: Top Customer Segments — Job + Education + Contact Type", """
+q7 = run_query("Q7: Top Customer Segments - Job + Education + Contact", """
 SELECT
     job,
     education,
     contact,
-    COUNT(*)                                          AS total,
-    SUM(subscribed)                                   AS subscribed,
-    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)     AS conversion_pct
+    COUNT(*)                                        AS total,
+    SUM(subscribed)                                 AS subscribed,
+    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)   AS conversion_pct
 FROM marketing_campaign
 GROUP BY job, education, contact
-HAVING total >= 50
+HAVING COUNT(*) >= 50
 ORDER BY conversion_pct DESC
 LIMIT 10
 """)
@@ -146,42 +239,41 @@ LIMIT 10
 # ────────────────────────────────────────────────────────────────
 # QUERY 8: Call Duration Impact on Conversion
 # ────────────────────────────────────────────────────────────────
-q8 = run_query("Q8: Call Duration Category vs Conversion Rate", """
+q8 = run_query("Q8: Call Duration vs Conversion Rate", """
 SELECT
     duration_category,
-    COUNT(*)                                          AS total,
-    SUM(subscribed)                                   AS subscribed,
-    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)     AS conversion_pct
+    COUNT(*)                                        AS total,
+    SUM(subscribed)                                 AS subscribed,
+    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)   AS conversion_pct
 FROM marketing_campaign
 GROUP BY duration_category
-ORDER BY conversion_pct
+ORDER BY conversion_pct ASC
 """)
 
 # ────────────────────────────────────────────────────────────────
-# QUERY 9: Economic Indicators vs Subscription (Avg by outcome)
+# QUERY 9: Season vs Conversion Rate
 # ────────────────────────────────────────────────────────────────
-q9 = run_query("Q9: Economic Context — Avg Indicators by Subscription", """
+q9 = run_query("Q9: Season vs Conversion Rate", """
 SELECT
-    y                                                 AS subscribed,
-    ROUND(AVG("emp.var.rate"), 3)                     AS avg_emp_variation_rate,
-    ROUND(AVG("cons.price.idx"), 3)                   AS avg_consumer_price_idx,
-    ROUND(AVG("cons.conf.idx"), 3)                    AS avg_consumer_conf_idx,
-    ROUND(AVG(euribor3m), 3)                          AS avg_euribor_rate,
-    ROUND(AVG("nr.employed"), 0)                        AS avg_nr_employed
+    season,
+    COUNT(*)                                        AS total_contacts,
+    SUM(subscribed)                                 AS subscribed,
+    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)   AS conversion_pct
 FROM marketing_campaign
-GROUP BY y
+GROUP BY season
+ORDER BY conversion_pct DESC
 """)
 
 # ────────────────────────────────────────────────────────────────
-# QUERY 10: Housing & Loan Impact
+# QUERY 10: Housing Loan & Personal Loan Impact
 # ────────────────────────────────────────────────────────────────
-q10 = run_query("Q10: Housing Loan & Personal Loan Impact on Subscription", """
+q10 = run_query("Q10: Housing Loan & Personal Loan Impact", """
 SELECT
     housing,
     loan,
-    COUNT(*)                                          AS total,
-    SUM(subscribed)                                   AS subscribed,
-    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)     AS conversion_pct
+    COUNT(*)                                        AS total,
+    SUM(subscribed)                                 AS subscribed,
+    ROUND(SUM(subscribed) * 100.0 / COUNT(*), 2)   AS conversion_pct
 FROM marketing_campaign
 GROUP BY housing, loan
 ORDER BY conversion_pct DESC
@@ -191,16 +283,16 @@ conn.close()
 
 # ── Save all query results ────────────────────────────────────────
 queries = [
-    ('q1_overall_success',         q1),
-    ('q2_by_education',            q2),
-    ('q3_by_job',                  q3),
-    ('q4_monthly_performance',     q4),
-    ('q5_age_group_analysis',      q5),
-    ('q6_previous_outcome',        q6),
-    ('q7_top_segments',            q7),
-    ('q8_duration_impact',         q8),
-    ('q9_economic_indicators',     q9),
-    ('q10_housing_loan',           q10),
+    ('q1_overall',        q1),
+    ('q2_education',      q2),
+    ('q3_job',            q3),
+    ('q4_monthly',        q4),
+    ('q5_age',            q5),
+    ('q6_prev_outcome',   q6),
+    ('q7_segments',       q7),
+    ('q8_duration',       q8),
+    ('q9_season',         q9),
+    ('q10_loan',          q10),
 ]
 for name, result in queries:
     result.to_csv(f'data/sql_{name}.csv', index=False)
@@ -219,7 +311,7 @@ RED   = '#F85149'
 PINK  = '#BC8CFF'
 
 fig = plt.figure(figsize=(22, 12), facecolor=BG)
-fig.suptitle('SQL Analysis Results — Bank Marketing Campaign',
+fig.suptitle('SQL Analysis Results -- Bank Marketing Campaign',
              fontsize=17, fontweight='bold', color=TEXT, y=0.98,
              fontfamily='monospace')
 gs = gridspec.GridSpec(2, 2, figure=fig, hspace=0.45, wspace=0.35,
@@ -241,8 +333,8 @@ sax(ax1, 'x')
 job_s = q3.sort_values('conversion_rate_pct')
 bar_c = [GREEN if v >= q3['conversion_rate_pct'].mean() else ACCENT
          for v in job_s['conversion_rate_pct']]
-hb = ax1.barh(job_s['job'], job_s['conversion_rate_pct'],
-              color=bar_c, edgecolor='none', height=0.6)
+ax1.barh(job_s['job'], job_s['conversion_rate_pct'],
+         color=bar_c, edgecolor='none', height=0.6)
 ax1.axvline(q3['conversion_rate_pct'].mean(), color=YELLOW, lw=1.2,
             ls='--', label=f"Avg {q3['conversion_rate_pct'].mean():.1f}%")
 ax1.set_title('Q3: Conversion Rate by Job (%)', fontweight='bold', fontsize=11)
@@ -257,8 +349,8 @@ q4_s = q4.copy()
 q4_s['month_n'] = q4_s['month'].map({m:i for i,m in enumerate(month_order)})
 q4_s = q4_s.sort_values('month_n')
 ax2b = ax2.twinx()
-ax2.bar(q4_s['month'], q4_s['contacts']/1000, color=ACCENT, alpha=0.4,
-        width=0.6, edgecolor='none', label='Contacts (K)')
+ax2.bar(q4_s['month'], q4_s['total_contacts']/1000, color=ACCENT, alpha=0.4,
+        width=0.6, edgecolor='none')
 ax2b.plot(q4_s['month'], q4_s['conversion_pct'], color=GREEN, lw=2.5,
           marker='o', ms=5, markerfacecolor=BG, markeredgecolor=GREEN)
 ax2.set_title('Q4: Monthly Contacts & Conversion %', fontweight='bold', fontsize=11)
@@ -300,3 +392,4 @@ ax4.set_ylabel('Conversion Rate %')
 plt.savefig('outputs/sql_analysis.png', dpi=150, bbox_inches='tight', facecolor=BG)
 print("[OK] Saved: outputs/sql_analysis.png")
 print("\n[DONE] SQL analysis complete!")
+print(f"  Engine used: {'MySQL' if USE_MYSQL else 'SQLite (MySQL not connected)'}")
