@@ -1,0 +1,12 @@
+job,total_contacts,subscribed,conversion_rate_pct,avg_call_sec
+student,875,275,31.43,284.0
+retired,1718,434,25.26,274.0
+unemployed,1014,144,14.2,249.0
+admin.,10748,1388,12.91,254.0
+management,2924,328,11.22,257.0
+technician,6739,730,10.83,250.0
+self-employed,1421,149,10.49,264.0
+housemaid,1060,106,10.0,250.0
+entrepreneur,1456,124,8.52,263.0
+services,3967,323,8.14,258.0
+blue-collar,9252,638,6.9,265.0

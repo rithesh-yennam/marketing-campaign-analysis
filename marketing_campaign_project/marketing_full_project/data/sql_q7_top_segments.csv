@@ -1,0 +1,11 @@
+job,education,contact,total,subscribed,conversion_pct
+student,basic.9y,cellular,77,31,40.26
+retired,basic.4y,cellular,431,169,39.21
+student,high.school,cellular,279,101,36.2
+student,university.degree,cellular,248,82,33.06
+retired,university.degree,cellular,291,90,30.93
+retired,professional.course,cellular,166,50,30.12
+retired,high.school,cellular,192,55,28.65
+unemployed,basic.4y,cellular,58,14,24.14
+unemployed,university.degree,cellular,194,41,21.13
+services,university.degree,cellular,198,41,20.71

@@ -1,0 +1,5 @@
+Step,Rows,Columns,Note
+Raw dataset,41188,21,Raw input
+After handling unknowns,41188,21,Replaced unknowns with mode
+After removing duplicates,41174,21,14 duplicates removed
+After feature engineering,41174,28,6 new features added

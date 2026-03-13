@@ -1,0 +1,7 @@
+duration_category,total,subscribed,conversion_pct
+,4,0,0.0
+Very Short (<1min),4279,1,0.02
+Short (1-3min),16411,563,3.43
+Medium (3-5min),9278,953,10.27
+Long (5-10min),7738,1438,18.58
+Very Long (>10min),3464,1684,48.61

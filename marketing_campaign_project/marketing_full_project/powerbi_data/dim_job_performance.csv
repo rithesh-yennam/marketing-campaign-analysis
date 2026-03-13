@@ -1,0 +1,12 @@
+job,Total_Contacts,Subscribed,Avg_Duration_Sec,Conversion_Rate_Pct
+admin.,10748,1388,254.0,12.91
+blue-collar,9252,638,265.0,6.9
+entrepreneur,1456,124,263.0,8.52
+housemaid,1060,106,250.0,10.0
+management,2924,328,257.0,11.22
+retired,1718,434,274.0,25.26
+self-employed,1421,149,264.0,10.49
+services,3967,323,258.0,8.14
+student,875,275,284.0,31.43
+technician,6739,730,250.0,10.83
+unemployed,1014,144,249.0,14.2
